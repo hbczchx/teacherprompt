@@ -34,11 +34,17 @@ export default function MyTemplatesPage() {
     const placeholder = selection ? `{{${selection}}}` : '{{占位符}}';
     const newText = before + placeholder + after;
     setForm({ ...form, content: newText });
-    // 光标放占位符之后
+    // 恢复光标：选中包裹时放末尾，空插入时选中示例文字方便立刻改名
     requestAnimationFrame(() => {
       el.focus();
-      const cursor = before.length + placeholder.length;
-      el.setSelectionRange(cursor, cursor);
+      if (selection) {
+        const cursor = before.length + placeholder.length;
+        el.setSelectionRange(cursor, cursor);
+      } else {
+        const selStart = before.length + 2;
+        const selEnd = before.length + placeholder.length - 2;
+        el.setSelectionRange(selStart, selEnd);
+      }
     });
   };
 
