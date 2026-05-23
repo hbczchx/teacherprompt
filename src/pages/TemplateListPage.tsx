@@ -4,19 +4,16 @@ import { scenarios } from '../data/scenarios';
 import { useTemplateStore } from '../store/templateStore';
 import TemplateCard from '../components/TemplateCard';
 import AdPlaceholder from '../components/AdPlaceholder';
-import FloatingBar from '../components/FloatingBar';
 import { ArrowLeft } from 'lucide-react';
 
 export default function TemplateListPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { allTemplates, selectedIds, toggleSelect, clearSelection, loadTemplates } =
-    useTemplateStore();
+  const { allTemplates, loadTemplates } = useTemplateStore();
 
   useEffect(() => {
     loadTemplates();
-    clearSelection();
-  }, [loadTemplates, clearSelection]);
+  }, [loadTemplates]);
 
   const scenario = useMemo(() => scenarios.find((s) => s.id === id), [id]);
 
@@ -29,10 +26,7 @@ export default function TemplateListPage() {
     return (
       <div className="text-center py-20">
         <p className="text-gray-400 mb-4">未找到该场景</p>
-        <button
-          onClick={() => navigate('/')}
-          className="text-blue-500 text-sm hover:underline"
-        >
+        <button onClick={() => navigate('/')} className="text-blue-500 text-sm hover:underline">
           返回首页
         </button>
       </div>
@@ -41,7 +35,6 @@ export default function TemplateListPage() {
 
   return (
     <div>
-      {/* 场景标题 */}
       <div className="mb-6">
         <button
           onClick={() => navigate('/')}
@@ -59,20 +52,15 @@ export default function TemplateListPage() {
         </div>
       </div>
 
-      {/* 模板列表 */}
       {templates.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <p>该场景暂无模板</p>
         </div>
       ) : (
-        <div className="space-y-3 pb-20">
+        <div className="space-y-3 pb-8">
           {templates.map((t, i) => (
             <div key={t.id}>
-              <TemplateCard
-                template={t}
-                selected={selectedIds.includes(t.id)}
-                onToggle={() => toggleSelect(t.id)}
-              />
+              <TemplateCard template={t} />
               {(i + 1) % 3 === 0 && i + 1 < templates.length && (
                 <AdPlaceholder size="inline" className="mt-3" />
               )}
@@ -80,9 +68,6 @@ export default function TemplateListPage() {
           ))}
         </div>
       )}
-
-      {/* 浮动操作栏 */}
-      <FloatingBar selectedCount={selectedIds.length} />
     </div>
   );
 }

@@ -1,29 +1,27 @@
+import { useNavigate } from 'react-router-dom';
+import { useTemplateStore } from '../store/templateStore';
 import type { PromptTemplate } from '../types';
+import { ArrowRight } from 'lucide-react';
 
 interface Props {
   template: PromptTemplate;
-  selected: boolean;
-  onToggle: () => void;
 }
 
-export default function TemplateCard({ template, selected, onToggle }: Props) {
+export default function TemplateCard({ template }: Props) {
+  const navigate = useNavigate();
+  const selectTemplate = useTemplateStore((s) => s.selectTemplate);
+
+  const handleGo = () => {
+    selectTemplate(template.id);
+    navigate('/editor');
+  };
+
   return (
     <div
-      onClick={onToggle}
-      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-        selected
-          ? 'border-blue-400 bg-blue-50 shadow-sm'
-          : 'border-gray-200 bg-white hover:border-gray-300'
-      }`}
+      onClick={handleGo}
+      className="p-4 rounded-lg border-2 border-gray-200 bg-white hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all group"
     >
-      <div className="flex items-start gap-3">
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={onToggle}
-          className="mt-1 w-4 h-4 accent-blue-500 shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        />
+      <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <h4 className="font-medium text-gray-800 mb-1">{template.title}</h4>
           <p className="text-sm text-gray-500 line-clamp-2 whitespace-pre-wrap">
@@ -42,6 +40,15 @@ export default function TemplateCard({ template, selected, onToggle }: Props) {
             )}
           </div>
         </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleGo();
+          }}
+          className="shrink-0 flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-blue-500 text-white opacity-0 group-hover:opacity-100 hover:bg-blue-600 transition-all"
+        >
+          去填写 <ArrowRight size={14} />
+        </button>
       </div>
     </div>
   );

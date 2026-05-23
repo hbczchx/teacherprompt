@@ -15,7 +15,7 @@ const emptyForm = (scenarioId: string): Omit<PromptTemplate, 'id' | 'isBuiltIn' 
 });
 
 export default function MyTemplatesPage() {
-  const { allTemplates, loadTemplates, addTemplate, updateTemplate, deleteTemplate } =
+  const { allTemplates, loadTemplates, addTemplate, updateTemplate, deleteTemplate, canAddTemplate } =
     useTemplateStore();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -89,13 +89,16 @@ export default function MyTemplatesPage() {
         updateTemplate({ ...existing, ...templateData });
       }
     } else {
-      addTemplate({
+      if (!addTemplate({
         ...templateData,
         id: `user-${Date.now()}`,
         isBuiltIn: false,
         useCount: 0,
         createdAt: new Date().toISOString(),
-      });
+      })) {
+        toast.error('自定义模板已达上限（3个），请删除旧模板后再创建');
+        return;
+      }
     }
     resetForm();
   };
@@ -115,13 +118,26 @@ export default function MyTemplatesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-800">我的模板</h1>
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">我的模板</h1>
+          <p className="text-xs text-gray-400 mt-0.5">
+            已创建 {userTemplates.length} / 3 个
+          </p>
+        </div>
         <button
           onClick={() => {
+            if (!canAddTemplate()) {
+              toast.error('自定义模板已达上限（3个），请删除旧模板后再创建');
+              return;
+            }
             resetForm();
             setShowForm(true);
           }}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-colors ${
+            userTemplates.length >= 3
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
+          }`}
         >
           <Plus size={16} />
           新建模板

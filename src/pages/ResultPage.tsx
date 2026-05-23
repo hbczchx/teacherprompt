@@ -20,10 +20,8 @@ const aiTools = [
 async function copyAndOpen(text: string, url: string) {
   try {
     await navigator.clipboard.writeText(text);
-    toast.success('已复制到剪贴板，正在打开...');
-  } catch {
-    // 复制失败仍打开网页
-  }
+    toast.success('已复制，正在打开...');
+  } catch { /* ignore */ }
   window.open(url, '_blank');
 }
 
@@ -31,38 +29,37 @@ export default function ResultPage() {
   const navigate = useNavigate();
   const {
     allTemplates,
-    selectedIds,
+    selectedId,
     filledValues,
-    generatedContents,
+    generatedContent,
     incrementUseCount,
     resetEditor,
     loadTemplates,
   } = useTemplateStore();
   const { add, load } = useHistoryStore();
 
-  // 可编辑的内容副本
-  const [editedContents, setEditedContents] = useState<Record<string, string>>({});
+  const [editedContent, setEditedContent] = useState('');
 
   useEffect(() => {
     loadTemplates();
     load();
-    if (Object.keys(generatedContents).length === 0) {
+    if (!generatedContent) {
       navigate('/');
       return;
     }
-    incrementUseCount(selectedIds);
-    // 初始化编辑副本
-    setEditedContents({ ...generatedContents });
+    if (selectedId) incrementUseCount(selectedId);
+    setEditedContent(generatedContent);
   }, []);
 
-  const selectedTemplates = allTemplates.filter((t) => selectedIds.includes(t.id));
+  const template = allTemplates.find((t) => t.id === selectedId);
 
   const handleSaveHistory = () => {
+    if (!selectedId) return;
     add({
       id: Date.now().toString(),
-      templateIds: selectedIds,
-      filledValues,
-      generatedContents: editedContents,
+      templateIds: [selectedId],
+      filledValues: { [selectedId]: filledValues },
+      generatedContents: { [selectedId]: editedContent },
       createdAt: new Date().toISOString(),
     });
     toast.success('已保存到历史记录');
@@ -73,11 +70,6 @@ export default function ResultPage() {
     navigate('/');
   };
 
-  const allText = selectedTemplates
-    .map((t) => editedContents[t.id] || generatedContents[t.id])
-    .filter(Boolean)
-    .join('\n\n---\n\n');
-
   return (
     <div>
       <Steps current={3} />
@@ -85,7 +77,7 @@ export default function ResultPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-800">生成结果</h1>
         <div className="flex gap-2">
-          <CopyButton text={allText} label="全部复制" />
+          <CopyButton text={editedContent} label="复制" />
           <button
             onClick={handleSaveHistory}
             className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
@@ -95,23 +87,15 @@ export default function ResultPage() {
         </div>
       </div>
 
-      {/* 可编辑的提示词 */}
-      <div className="space-y-6">
-        {selectedTemplates.map((template) => (
-          <div key={template.id}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-medium text-gray-700">{template.title}</h3>
-              <CopyButton text={editedContents[template.id] || generatedContents[template.id] || ''} />
-            </div>
-            <PromptPreview
-              content={editedContents[template.id] || generatedContents[template.id] || ''}
-              onChange={(val) =>
-                setEditedContents((prev) => ({ ...prev, [template.id]: val }))
-              }
-            />
-          </div>
-        ))}
+      {/* 标题 */}
+      <div className="mb-2">
+        <h3 className="font-medium text-gray-700">{template?.title || '提示词'}</h3>
       </div>
+
+      <PromptPreview
+        content={editedContent}
+        onChange={setEditedContent}
+      />
 
       {/* AI工具快捷入口 */}
       <div className="mt-8 p-5 bg-gray-50 rounded-xl border border-gray-200">
@@ -123,7 +107,7 @@ export default function ResultPage() {
           {aiTools.map((tool) => (
             <button
               key={tool.name}
-              onClick={() => copyAndOpen(allText, tool.url)}
+              onClick={() => copyAndOpen(editedContent, tool.url)}
               className={`px-4 py-2 text-sm text-white rounded-lg transition-colors ${tool.color}`}
             >
               打开{tool.name}
@@ -132,10 +116,8 @@ export default function ResultPage() {
         </div>
       </div>
 
-      {/* 广告位 */}
       <AdPlaceholder size="card" className="mt-8" />
 
-      {/* 底部操作 */}
       <div className="mt-8 flex justify-center gap-3">
         <button
           onClick={() => navigate('/editor')}

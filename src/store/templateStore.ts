@@ -3,92 +3,100 @@ import type { PromptTemplate } from '../types';
 import { builtInTemplates } from '../data/templates';
 import { getItem, setItem } from '../utils/storage';
 
+const MAX_USER_TEMPLATES = 3;
+
+function userKey(phone: string) {
+  return `user-templates:${phone}`;
+}
+
+function getUserTemplates(): PromptTemplate[] {
+  const phone = localStorage.getItem('teacherprompt:user');
+  if (!phone) return [];
+  return getItem<PromptTemplate[]>(userKey(phone), []);
+}
+
+function saveUserTemplates(templates: PromptTemplate[]) {
+  const phone = localStorage.getItem('teacherprompt:user');
+  if (!phone) return;
+  setItem(userKey(phone), templates);
+}
+
 interface TemplateStore {
   allTemplates: PromptTemplate[];
-  selectedIds: string[];
-  filledValues: Record<string, Record<string, string>>;
-  generatedContents: Record<string, string>;
+  selectedId: string | null;
+  filledValues: Record<string, string>;
+  generatedContent: string;
 
   loadTemplates: () => void;
-  toggleSelect: (id: string) => void;
-  selectAll: (ids: string[]) => void;
+  selectTemplate: (id: string) => void;
   clearSelection: () => void;
-  setFilledValues: (templateId: string, values: Record<string, string>) => void;
-  setGeneratedContents: (contents: Record<string, string>) => void;
+  setFilledValues: (values: Record<string, string>) => void;
+  setGeneratedContent: (content: string) => void;
   resetEditor: () => void;
 
-  addTemplate: (t: PromptTemplate) => void;
+  addTemplate: (t: PromptTemplate) => boolean;
   updateTemplate: (t: PromptTemplate) => void;
   deleteTemplate: (id: string) => void;
-  incrementUseCount: (ids: string[]) => void;
+  incrementUseCount: (id: string) => void;
+  canAddTemplate: () => boolean;
 }
 
 export const useTemplateStore = create<TemplateStore>((set, get) => ({
   allTemplates: [],
-  selectedIds: [],
+  selectedId: null,
   filledValues: {},
-  generatedContents: {},
+  generatedContent: '',
 
   loadTemplates: () => {
-    const userTemplates = getItem<PromptTemplate[]>('user-templates', []);
+    const userTemplates = getUserTemplates();
     set({ allTemplates: [...builtInTemplates, ...userTemplates] });
   },
 
-  toggleSelect: (id) => {
-    const { selectedIds } = get();
-    if (selectedIds.includes(id)) {
-      set({ selectedIds: selectedIds.filter((x) => x !== id) });
-    } else {
-      set({ selectedIds: [...selectedIds, id] });
-    }
+  selectTemplate: (id) => set({ selectedId: id }),
+  clearSelection: () => set({ selectedId: null }),
+
+  setFilledValues: (values) => set({ filledValues: values }),
+  setGeneratedContent: (content) => set({ generatedContent: content }),
+  resetEditor: () => set({ selectedId: null, filledValues: {}, generatedContent: '' }),
+
+  canAddTemplate: () => {
+    const userTemplates = getUserTemplates();
+    return userTemplates.length < MAX_USER_TEMPLATES;
   },
-
-  selectAll: (ids) => set({ selectedIds: ids }),
-  clearSelection: () => set({ selectedIds: [] }),
-
-  setFilledValues: (templateId, values) => {
-    set((s) => ({
-      filledValues: { ...s.filledValues, [templateId]: values },
-    }));
-  },
-
-  setGeneratedContents: (contents) => set({ generatedContents: contents }),
-  resetEditor: () => set({ selectedIds: [], filledValues: {}, generatedContents: {} }),
 
   addTemplate: (t) => {
-    const userTemplates = getItem<PromptTemplate[]>('user-templates', []);
+    const userTemplates = getUserTemplates();
+    if (userTemplates.length >= MAX_USER_TEMPLATES) return false;
     userTemplates.push(t);
-    setItem('user-templates', userTemplates);
+    saveUserTemplates(userTemplates);
     get().loadTemplates();
+    return true;
   },
 
   updateTemplate: (t) => {
-    const userTemplates = getItem<PromptTemplate[]>('user-templates', []);
+    const userTemplates = getUserTemplates();
     const idx = userTemplates.findIndex((x) => x.id === t.id);
     if (idx >= 0) {
       userTemplates[idx] = t;
-      setItem('user-templates', userTemplates);
+      saveUserTemplates(userTemplates);
       get().loadTemplates();
     }
   },
 
   deleteTemplate: (id) => {
-    const userTemplates = getItem<PromptTemplate[]>('user-templates', []);
-    setItem('user-templates', userTemplates.filter((x) => x.id !== id));
+    const userTemplates = getUserTemplates();
+    saveUserTemplates(userTemplates.filter((x) => x.id !== id));
     get().loadTemplates();
   },
 
-  incrementUseCount: (ids) => {
-    const userTemplates = getItem<PromptTemplate[]>('user-templates', []);
-    let changed = false;
-    for (const t of userTemplates) {
-      if (ids.includes(t.id)) {
-        t.useCount++;
-        changed = true;
-      }
-    }
+  incrementUseCount: (id) => {
+    const userTemplates = getUserTemplates();
+    const changed = userTemplates.some((t) => {
+      if (t.id === id) { t.useCount++; return true; }
+      return false;
+    });
     if (changed) {
-      setItem('user-templates', userTemplates);
+      saveUserTemplates(userTemplates);
       get().loadTemplates();
     }
   },

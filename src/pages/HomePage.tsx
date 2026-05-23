@@ -7,7 +7,7 @@ import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function HomePage() {
-  const { loadTemplates, allTemplates } = useTemplateStore();
+  const { loadTemplates, allTemplates, selectTemplate } = useTemplateStore();
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
@@ -16,9 +16,7 @@ export default function HomePage() {
   }, [loadTemplates]);
 
   const filtered = scenarios.filter(
-    (s) =>
-      s.name.includes(search) ||
-      s.description.includes(search)
+    (s) => s.name.includes(search) || s.description.includes(search)
   );
 
   const recentIds = JSON.parse(localStorage.getItem('teacherprompt:recent') || '[]') as string[];
@@ -33,7 +31,6 @@ export default function HomePage() {
         <p className="text-gray-500">选择场景后，系统将为您推荐对应的提示词模板</p>
       </div>
 
-      {/* 搜索框 */}
       <div className="relative mb-8 max-w-md mx-auto">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
@@ -45,17 +42,14 @@ export default function HomePage() {
         />
       </div>
 
-      {/* 场景卡片网格 */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         {filtered.map((s) => (
           <ScenarioCard key={s.id} scenario={s} />
         ))}
       </div>
 
-      {/* 广告位 */}
       <AdPlaceholder size="card" className="mb-8" />
 
-      {/* 最近使用 */}
       {recentTemplates.length > 0 && (
         <div className="mt-8">
           <h2 className="text-lg font-semibold text-gray-700 mb-3">最近使用的模板</h2>
@@ -64,11 +58,8 @@ export default function HomePage() {
               <button
                 key={t!.id}
                 onClick={() => {
-                  const store = useTemplateStore.getState();
-                  if (!store.selectedIds.includes(t!.id)) {
-                    store.toggleSelect(t!.id);
-                  }
-                  navigate(`/scenario/${t!.scenarioId}`);
+                  selectTemplate(t!.id);
+                  navigate('/editor');
                 }}
                 className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
               >
