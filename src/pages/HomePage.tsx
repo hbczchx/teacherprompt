@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { scenarios } from '../data/scenarios';
 import { useTemplateStore } from '../store/templateStore';
 import ScenarioCard from '../components/ScenarioCard';
+import AdPlaceholder from '../components/AdPlaceholder';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -50,6 +51,9 @@ export default function HomePage() {
           <ScenarioCard key={s.id} scenario={s} />
         ))}
       </div>
+
+      {/* 广告位 */}
+      <AdPlaceholder size="card" className="mb-8" />
 
       {/* 最近使用 */}
       {recentTemplates.length > 0 && (

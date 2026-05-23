@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { scenarios } from '../data/scenarios';
 import { useTemplateStore } from '../store/templateStore';
 import TemplateCard from '../components/TemplateCard';
+import AdPlaceholder from '../components/AdPlaceholder';
 import FloatingBar from '../components/FloatingBar';
 import { ArrowLeft } from 'lucide-react';
 
@@ -65,13 +66,17 @@ export default function TemplateListPage() {
         </div>
       ) : (
         <div className="space-y-3 pb-20">
-          {templates.map((t) => (
-            <TemplateCard
-              key={t.id}
-              template={t}
-              selected={selectedIds.includes(t.id)}
-              onToggle={() => toggleSelect(t.id)}
-            />
+          {templates.map((t, i) => (
+            <div key={t.id}>
+              <TemplateCard
+                template={t}
+                selected={selectedIds.includes(t.id)}
+                onToggle={() => toggleSelect(t.id)}
+              />
+              {(i + 1) % 3 === 0 && i + 1 < templates.length && (
+                <AdPlaceholder size="inline" className="mt-3" />
+              )}
+            </div>
           ))}
         </div>
       )}

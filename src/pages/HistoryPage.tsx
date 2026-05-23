@@ -3,6 +3,7 @@ import { useHistoryStore } from '../store/historyStore';
 import { useTemplateStore } from '../store/templateStore';
 import { useNavigate } from 'react-router-dom';
 import CopyButton from '../components/CopyButton';
+import AdPlaceholder from '../components/AdPlaceholder';
 import { Trash2 } from 'lucide-react';
 
 export default function HistoryPage() {
@@ -51,7 +52,7 @@ export default function HistoryPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {histories.map((h) => {
+          {histories.map((h, i) => {
             const templates = h.templateIds
               .map((id) => allTemplates.find((t) => t.id === id))
               .filter(Boolean);
@@ -62,7 +63,8 @@ export default function HistoryPage() {
               .join('\n\n---\n\n');
 
             return (
-              <div key={h.id} className="p-4 rounded-lg border border-gray-200 bg-white">
+              <div key={h.id}>
+                <div className="p-4 rounded-lg border border-gray-200 bg-white">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <span className="text-xs text-gray-400">{formatDate(h.createdAt)}</span>
@@ -99,6 +101,10 @@ export default function HistoryPage() {
                   </pre>
                 </div>
               </div>
+              {(i + 1) % 2 === 0 && i + 1 < histories.length && (
+                <AdPlaceholder size="inline" className="mt-3" />
+              )}
+            </div>
             );
           })}
         </div>

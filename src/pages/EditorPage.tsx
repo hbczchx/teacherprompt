@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTemplateStore } from '../store/templateStore';
 import Steps from '../components/Steps';
 import InlinePromptEditor from '../components/InlinePromptEditor';
+import AdPlaceholder from '../components/AdPlaceholder';
 import { fillTemplate } from '../utils/placeholder';
 import { Sparkles } from 'lucide-react';
 
@@ -62,6 +63,8 @@ export default function EditorPage() {
           />
         ))}
       </div>
+
+      <AdPlaceholder size="banner" className="mb-6" />
 
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-gray-200 px-6 py-3 rounded-full shadow-lg flex items-center gap-4 z-50">
         <span className="text-sm text-gray-400">

@@ -5,6 +5,7 @@ import { useHistoryStore } from '../store/historyStore';
 import Steps from '../components/Steps';
 import PromptPreview from '../components/PromptPreview';
 import CopyButton from '../components/CopyButton';
+import AdPlaceholder from '../components/AdPlaceholder';
 import { ArrowLeft, RotateCcw, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -130,6 +131,9 @@ export default function ResultPage() {
           ))}
         </div>
       </div>
+
+      {/* 广告位 */}
+      <AdPlaceholder size="card" className="mt-8" />
 
       {/* 底部操作 */}
       <div className="mt-8 flex justify-center gap-3">

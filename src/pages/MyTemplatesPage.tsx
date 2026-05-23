@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTemplateStore } from '../store/templateStore';
 import { scenarios } from '../data/scenarios';
 import type { PromptTemplate } from '../types';
+import AdPlaceholder from '../components/AdPlaceholder';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 
 const emptyForm = (scenarioId: string): Omit<PromptTemplate, 'id' | 'isBuiltIn' | 'useCount' | 'createdAt'> => ({
@@ -194,10 +195,11 @@ export default function MyTemplatesPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {userTemplates.map((t) => {
+          {userTemplates.map((t, i) => {
             const scenario = scenarios.find((s) => s.id === t.scenarioId);
             return (
-              <div key={t.id} className="p-4 rounded-lg border border-gray-200 bg-white">
+              <div key={t.id}>
+                <div className="p-4 rounded-lg border border-gray-200 bg-white">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-gray-800">{t.title}</h4>
@@ -233,6 +235,10 @@ export default function MyTemplatesPage() {
                   </div>
                 </div>
               </div>
+              {(i + 1) % 2 === 0 && i + 1 < userTemplates.length && (
+                <AdPlaceholder size="inline" className="mt-3" />
+              )}
+            </div>
             );
           })}
         </div>
