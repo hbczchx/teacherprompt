@@ -30,14 +30,14 @@ export default function MyTemplatesPage() {
     const before = text.slice(0, start);
     const selection = text.slice(start, end);
     const after = text.slice(end);
-    // 如果有选中文字则包裹，否则插入空占位符
-    const placeholder = selection ? `{{${selection}}}` : '{{}}';
+    // 选中文字则包裹，否则插入带示例文字的占位符
+    const placeholder = selection ? `{{${selection}}}` : '{{占位符}}';
     const newText = before + placeholder + after;
     setForm({ ...form, content: newText });
-    // 恢复光标到占位符内
+    // 光标放占位符之后
     requestAnimationFrame(() => {
       el.focus();
-      const cursor = before.length + (selection ? placeholder.length : 2);
+      const cursor = before.length + placeholder.length;
       el.setSelectionRange(cursor, cursor);
     });
   };
