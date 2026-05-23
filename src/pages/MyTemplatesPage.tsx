@@ -4,6 +4,8 @@ import { scenarios } from '../data/scenarios';
 import type { PromptTemplate } from '../types';
 import AdPlaceholder from '../components/AdPlaceholder';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
+import { deduplicatePlaceholders } from '../utils/placeholder';
+import toast from 'react-hot-toast';
 
 const emptyForm = (scenarioId: string): Omit<PromptTemplate, 'id' | 'isBuiltIn' | 'useCount' | 'createdAt'> => ({
   scenarioId,
@@ -30,8 +32,9 @@ export default function MyTemplatesPage() {
     const before = text.slice(0, start);
     const selection = text.slice(start, end);
     const after = text.slice(end);
-    // 选中文字则包裹，否则插入带示例文字的占位符
-    const placeholder = selection ? `{{${selection}}}` : '{{占位符}}';
+    // 选中文字则包裹，否则插入带编号的占位符（防止重名）
+    const nextNum = (text.match(/\{\{占位符(\d+)\}\}/g) || []).length + 1;
+    const placeholder = selection ? `{{${selection}}}` : `{{占位符${nextNum}}}`;
     const newText = before + placeholder + after;
     setForm({ ...form, content: newText });
     // 恢复光标：选中包裹时放末尾，空插入时选中示例文字方便立刻改名
@@ -70,14 +73,24 @@ export default function MyTemplatesPage() {
   const handleSubmit = () => {
     if (!form.title.trim() || !form.content.trim()) return;
 
+    // 自动去重占位符
+    const { content: deduped, renamed } = deduplicatePlaceholders(form.content);
+    if (renamed.length > 0) {
+      setForm({ ...form, content: deduped });
+      toast(`占位符重名已自动修正：${renamed.join('，')}`, { icon: '📝' });
+    }
+    const finalContent = deduped;
+
+    const templateData = { ...form, content: finalContent };
+
     if (editingId) {
       const existing = allTemplates.find((t) => t.id === editingId);
       if (existing) {
-        updateTemplate({ ...existing, ...form });
+        updateTemplate({ ...existing, ...templateData });
       }
     } else {
       addTemplate({
-        ...form,
+        ...templateData,
         id: `user-${Date.now()}`,
         isBuiltIn: false,
         useCount: 0,

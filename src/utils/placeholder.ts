@@ -199,3 +199,27 @@ export function groupBySentences(
 
   return groups;
 }
+
+/** 检测并重名占位符，自动追加数字后缀避免共享值 */
+export function deduplicatePlaceholders(content: string): { content: string; renamed: string[] } {
+  const regex = /\{\{(.+?)\}\}/g;
+  const names = new Map<string, number>();
+  const renamed: string[] = [];
+
+  const deduped = content.replace(regex, (match, name: string) => {
+    const key = name.trim();
+    const count = names.get(key) ?? 0;
+    if (count === 0) {
+      // 第一次出现，不改名
+      names.set(key, 1);
+      return match;
+    }
+    // 重名，追加编号
+    const newName = `${key}${count + 1}`;
+    names.set(key, count + 1);
+    renamed.push(`${key} → ${newName}`);
+    return `{{${newName}}}`;
+  });
+
+  return { content: deduped, renamed };
+}
