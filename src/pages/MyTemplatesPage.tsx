@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useTemplateStore } from '../store/templateStore';
 import { scenarios } from '../data/scenarios';
 import type { PromptTemplate } from '../types';
@@ -19,6 +19,28 @@ export default function MyTemplatesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm(scenarios[0].id));
   const [tagInput, setTagInput] = useState('');
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertPlaceholder = () => {
+    const el = contentTextareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const text = form.content;
+    const before = text.slice(0, start);
+    const selection = text.slice(start, end);
+    const after = text.slice(end);
+    // 如果有选中文字则包裹，否则插入空占位符
+    const placeholder = selection ? `{{${selection}}}` : '{{}}';
+    const newText = before + placeholder + after;
+    setForm({ ...form, content: newText });
+    // 恢复光标到占位符内
+    requestAnimationFrame(() => {
+      el.focus();
+      const cursor = before.length + (selection ? placeholder.length : 2);
+      el.setSelectionRange(cursor, cursor);
+    });
+  };
 
   useEffect(() => {
     loadTemplates();
@@ -123,12 +145,20 @@ export default function MyTemplatesPage() {
                 模板内容（用 {'{{占位符}}'} 标记需填写部分）
               </label>
               <textarea
+                ref={contentTextareaRef}
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
                 rows={6}
                 placeholder={`你是一位经验丰富的{{学科}}教师，请为{{年级}}...`}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
               />
+              <button
+                type="button"
+                onClick={insertPlaceholder}
+                className="mt-1.5 inline-flex items-center gap-1 px-2 py-1 text-xs rounded border border-dashed border-blue-300 text-blue-500 hover:bg-blue-50 transition-colors"
+              >
+                + 插入占位符
+              </button>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">标签</label>
